@@ -1,8 +1,6 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import Quill from "quill";
-import "quill/dist/quill.snow.css";
 
 export default function RichNotes({ value, onChange }: any) {
   const editorRef = useRef<HTMLDivElement | null>(null);
@@ -11,43 +9,50 @@ export default function RichNotes({ value, onChange }: any) {
   useEffect(() => {
     if (!editorRef.current || quillRef.current) return;
 
-    quillRef.current = new Quill(editorRef.current, {
-      theme: "snow",
-      placeholder: "Add notes, payment instructions, or extra details...",
-      modules: {
-        toolbar: [
-          [{ header: [1, 2, 3, false] }],
-          [{ font: [] }],
-          [{ size: ["small", false, "large", "huge"] }],
+    // ✅ Load Quill only on client
+    import("quill").then((QuillModule) => {
+      import("quill/dist/quill.snow.css");
 
-          ["bold", "italic", "underline", "strike"],
+      const Quill = QuillModule.default;
 
-          [{ color: [] }, { background: [] }],
+      quillRef.current = new Quill(editorRef.current!, {
+        theme: "snow",
+        placeholder: "Add notes, payment instructions, or extra details...",
+        modules: {
+          toolbar: [
+            [{ header: [1, 2, 3, false] }],
+            [{ font: [] }],
+            [{ size: ["small", false, "large", "huge"] }],
 
-          [{ script: "sub" }, { script: "super" }],
+            ["bold", "italic", "underline", "strike"],
 
-          [{ list: "ordered" }, { list: "bullet" }],
+            [{ color: [] }, { background: [] }],
 
-          [{ indent: "-1" }, { indent: "+1" }],
+            [{ script: "sub" }, { script: "super" }],
 
-          ["blockquote", "code-block"],
+            [{ list: "ordered" }, { list: "bullet" }],
 
-          [{ align: [] }],
+            [{ indent: "-1" }, { indent: "+1" }],
 
-          ["link", "image"],
+            ["blockquote", "code-block"],
 
-          ["clean"],
-        ],
-      },
+            [{ align: [] }],
+
+            ["link", "image"],
+
+            ["clean"],
+          ],
+        },
+      });
+
+      quillRef.current.on("text-change", () => {
+        onChange(quillRef.current.root.innerHTML);
+      });
+
+      if (value) {
+        quillRef.current.root.innerHTML = value;
+      }
     });
-
-    quillRef.current.on("text-change", () => {
-      onChange(quillRef.current.root.innerHTML);
-    });
-
-    if (value) {
-      quillRef.current.root.innerHTML = value;
-    }
   }, []);
 
   return (
